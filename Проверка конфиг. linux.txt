@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+import subprocess
+import re
+
+def executer(cmd):
+    return subprocess.run(cmd, shell=True, stdout=subprocess.PIPE).stdout.decode()
+
+def audit():
+    etalon = '+chmod+chown+mount+module+uid+gid+audit+acl+mac+cap+chroot+rename+net:+chmod+chown+mount+module+uid+gid+audit+acl+mac+cap+chroot+rename+net'
+    result = executer('useraud -ol').strip()
+    if result == etalon:
+        print('Аудит по умолчанию: OK')
+    else:
+        print('Аудит по умолчанию: NOT OK')
+        print('RESULT: {}'.format(result))
+
+def user(username):
+    pattern = r'\w+:x:10..:10..::/home/\w+:/bin/bash'
+    result = executer('cat /etc/passwd | grep {}'.format(username)).strip()
+    match = re.match(pattern, result)
+    if match:
+        print('{}: OK'.format(username))
+    else:
+        print('{}: NOT OK'.format(username))
+        print('RESULT: {}'.format(result))
+
+def password(username):
+    pattern = r'{} P \d\d/\d\d/\d\d\d\d 0 365 7 -1'.format(username)
+    result = executer('passwd --status {}'.format(username))
+    match = re.match(pattern, result)
+    if match:
+        print('Пароль {}: OK'.format(username))
+    else:
+        print('Пароль {}: NOT OK'.format(username))
+        print('RESULT: {}'.format(result))
+
+def primary_groups(username):
+    etalon = username
+    result = executer('id -gn {}'.format(username)).strip()
+    if result == etalon:
+        print('Первичная группа {}: OK'.format(username))
+    else:
+        print('Первичная группа {}: NOT OK'.format(username))
+        print('RESULT: {}'.format(result))
+
+def all_groups(username):
+    etalon = username
+    result = executer('id -Gn {}'.format(username)).strip()
+    if result == etalon:
+        print('Все группы {}: OK'.format(username))
+    else:
+        print('Все группы {}: NOT OK'.format(username))
+        print('RESULT: {}'.format(result))
+
+def user_audit(username):
+    etalon = '{} +chmod+chown+mount+chroot:+chmod+chown+mount+chroot'.format(username)
+    result = executer('useraud {} -l'.format(username)).strip()
+    if result == etalon:
+        print('Аудит {}: OK'.format(username))
+    else:
+        print('Аудит {}: NOT OK'.format(username))
+        print('RESULT: {}'.format(result))
+
+def user_MRD(username):
+    etalon = ['минимальная метка: Уровень_0:Низкий:Нет:0x0',
+'   0:0:0x0:0x0',
+'максимальная метка: Уровень_0:Высокий:Нет:0x0',
+'   0:63:0x0:0x0']
+    result = executer('pdpl-user {}'.format(username)).split('\n')[:-1]
+    if result == etalon:
+        print('МРД {}: OK'.format(username))
+    else:
+        print('МРД {}: NOT OK'.format(username))
+        print('RESULT: {}'.format(result))
+
+if __name__ == '__main__':
+    audit()
+    user('admin')
+    password('admin')
+    primary_groups('admin')
+    all_groups('admin')
+    user_audit('admin')
+    user_MRD('admin')
+    print('\n')
+    user('server_adm')
+    password('server_adm')
+    primary_groups('server_adm')
+    all_groups('server_adm')
+    user_audit('server_adm')
+    user_MRD('server_adm')

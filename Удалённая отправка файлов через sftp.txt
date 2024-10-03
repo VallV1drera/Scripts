@@ -1,0 +1,35 @@
+import paramiko
+import threading
+
+def send_file(hostname, username, password, local_file_path, remote_file_path):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostname, username=username, password=password)
+    sftp = ssh.open_sftp()
+    sftp.put(local_file_path, remote_file_path)
+    sftp.close()
+    ssh.close()
+    print(f"File sent to {hostname}")
+
+def main():
+    hosts = []
+    with open("hosts.list") as f:
+        for line in f:
+            hosts.append(line.strip())
+
+    local_file_path = "file_to_send.txt"
+    remote_file_path = "/home/username/file_to_send.txt"
+    username = "username"
+    password = "password"
+
+    threads = []
+    for hostname in hosts:
+        thread = threading.Thread(target=send_file, args=(hostname, username, password, local_file_path, remote_file_path))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+if __name__ == "__main__":
+    main()

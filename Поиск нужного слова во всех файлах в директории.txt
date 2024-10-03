@@ -1,0 +1,42 @@
+import os
+import csv
+import re
+
+PATH_TO_FILES = '/home/VallVidrera/Desktop/123'
+PATH_TO_SAVE = '/home/VallVidrera/Desktop'
+KEY_WORD = r".*examle_word .*"
+
+def scan():
+    files = os.listdir(PATH_TO_FILES)
+    return files
+
+def search(file_name):
+    path = '{}/{}'.format(PATH_TO_FILES, file_name)
+    with open(path, 'r') as f:
+        data = f.readlines()
+    line_numbers = []
+    for line in data:
+        result = re.search(KEY_WORD, line)
+        if result:
+            line_numbers.append(data.index(line)+1)
+    return line_numbers
+
+def save_to_csv(data):
+    print(type(data))
+    with open('{}/report.csv'.format(PATH_TO_SAVE), 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(('File name', 'Line numbers'))
+        for line in data:
+            writer.writerow((line, data[line]))
+            
+def main():
+    files = scan()
+    result = {}
+    for file in files:
+        line_numbers = search(file)
+        if line_numbers:
+            result[file] = line_numbers
+    save_to_csv(result)
+
+if __name__ == '__main__':
+    main()

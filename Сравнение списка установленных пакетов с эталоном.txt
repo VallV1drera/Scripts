@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+
+from os import system
+
+def get_pkg_list():
+   print ("Получение списка установленных пакетов")
+   system('dpkg -l | awk \'{print $2, $3, $4}\' > list_of_pkgs')
+   system('sed -i \'1,7d\' list_of_pkgs')
+   print ("Список получен и сохранён в файл list_of_pkgs")
+
+def open_etalon():
+   filename = input("Введите имя файла эталона: ")
+   print ("Открытие файла с эталоном...")
+   etalon = open(filename, 'r')
+   print (f"Файл {filename} с эталоном открыт!")
+   print ("Чтение файла...")
+   etalon_list = etalon.readlines()
+   if etalon_list != []:
+      print ("Файл успешно прочитан. Закрываю файл эталона")
+      etalon.close()
+      print ("Файл эталона закрыт")
+   else:
+      print ("Ошибка при чтении файла!")
+      etalon.close()
+      print ("Файл эталона закрыт")
+      exit()
+   return etalon_list
+
+def open_cur_list():
+   print("Открытие файла со списком установленных пакетов...")
+   cur_list = open('list_of_pkgs', 'r')
+   print ("Файл со списком успешно открыт")
+   print ("Чтение файла...")
+   current_list = cur_list.readlines()
+   if current_list != []:
+      print ("Файл успешно прочитан. Закрываю файл списка установленных пакетов")
+      cur_list.close()
+      print ("Файл закрыт")
+   else:
+      print ("Ошибка при чтении файла!")
+      cur_list.close()
+      print ("Файл закрыт")
+      exit()
+   return current_list
+
+def ned_packs(etalon_list, current_list):
+   print ("\nНедостающие пакеты:\n")
+   for item in etalon_list:
+      if item not in current_list:
+         print (item)
+
+def cherta():
+   print ("_"*30)
+
+def lish_packs(etalon_list, current_list):
+   print ("\nЛишние пакеты:\n")
+   for item in current_list:
+      if item not in etalon_list:
+         print (item)
+
+def main():
+   get_pkg_list()
+   etalon_list = open_etalon()
+   current_list = open_cur_list()
+   ned_packs(etalon_list, current_list)
+   cherta()
+   lish_packs(etalon_list, current_list)
+
+if __name__ == "__main__":
+   main()
